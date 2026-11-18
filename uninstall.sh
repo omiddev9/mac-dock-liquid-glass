@@ -12,6 +12,7 @@ set -euo pipefail
 
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CFG="$HOME/.config/omarchy/shell.json"
+HYPR_DEST="$HOME/.config/hypr/dock.lua"
 HYPRLAND_LUA="$HOME/.config/hypr/hyprland.lua"
 STAMP="$(date +%s)"
 
