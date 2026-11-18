@@ -62,15 +62,26 @@ unlink_ours "$HOME/.config/omarchy/plugins/io.github.omiddev9.mac-dock-liquid-gl
 unlink_ours "$HOME/.local/bin/omarchy-dock-config"
 unlink_ours "$HOME/.config/hypr/dock.lua"
 
-if [[ -f $HYPRLAND_LUA ]] && grep -Eq "$REQUIRE_DETECT" "$HYPRLAND_LUA"; then
+hypr_owned=false
+if [[ -L "$HYPR_DEST" ]]; then
+  hypr_target=$(readlink -f -- "$HYPR_DEST" 2>/dev/null || true)
+  repo_base=$(readlink -f -- "$REPO" 2>/dev/null || true)
+  if [[ -n $hypr_target && -n $repo_base && ( $hypr_target == "$repo_base" || $hypr_target == "$repo_base"/* ) ]]; then
+    hypr_owned=true
+  fi
+fi
+
+if $hypr_owned && [[ -f $HYPRLAND_LUA ]] && grep -Eq "$REQUIRE_DETECT" "$HYPRLAND_LUA"; then
   cp "$HYPRLAND_LUA" "$HYPRLAND_LUA.bak.$STAMP"
-  # Drop only the exact comment and require lines the installer wrote (in the
+  # Drop only the exact comment and require lines this installer wrote (in the
   # current or legacy forms) — never any other line that merely mentions
-  # require(...).
+  # require(...), and never a require line owned by another checkout.
   sed -E -i -e "/^-- Blur and layer rules for the dock (see the Mac Dock Liquid Glass repo)\.$/d" \
     -e "/^pcall\(require, \"hypr\.dock\"\)( -- Mac Dock Liquid Glass)?$/d" \
     -e "/^require\(\"hypr\.dock\"\)$/d" "$HYPRLAND_LUA"
   ok "removed the hypr.dock require (backup: hyprland.lua.bak.$STAMP)"
+elif [[ -f $HYPRLAND_LUA ]] && grep -Eq "$REQUIRE_DETECT" "$HYPRLAND_LUA"; then
+  warn "hypr/dock.lua is not linked to this checkout; leaving the hypr.dock require in place."
 fi
 
 if $PURGE_CONFIG && [[ -f $CFG ]]; then

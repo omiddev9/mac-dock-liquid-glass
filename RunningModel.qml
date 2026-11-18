@@ -151,7 +151,7 @@ Item {
   readonly property var groups: {
     void model.rev
     var vals = ToplevelManager.toplevels.values || []
-    var out = {}
+    var out = Object.create(null)
     for (var i = 0; i < vals.length; i++) {
       var id = canon(vals[i].appId)
       if (!id) continue

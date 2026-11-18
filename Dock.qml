@@ -2060,7 +2060,7 @@ Item {
     // each edge of the card lands on the output.
     function geometry(): string {
       var winLen = root.vertical ? root.windowHeight : root.windowWidth
-      var cardLen = root.vertical ? root.cardH : root.cardW
+      var cardLen = root.cardMain
       var shown = []
       for (var i = 0; i < root.displayItems.length; i++) {
         var cell = root.cellAt(i)
