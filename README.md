@@ -1,13 +1,13 @@
 # Mac Dock Liquid Glass
 
-![Preview](preview.png)
+![Mac Dock Liquid Glass](preview.png)
 
 A macOS-style dock for the Omarchy shell with fisheye magnification, a liquid-glass
 surface, Hyprland backdrop blur, and optional taskbar styling sync.
 
-The dock runs as an Omarchy shell plugin. It seeds a starter set of pinned apps on
-first use, supports all four screen edges, auto-hide, window cycling, drag-to-reorder,
-running indicators, hover labels, themed tiles, icon tinting, and a settings popup.
+Mac Dock Liquid Glass is built for Omarchy's Quickshell-based shell. It provides a
+continuous magnifier, smart hide/reveal, window cycling, running indicators,
+drag-to-reorder, hover labels, themed tiles, icon tinting, and a settings popup.
 
 ## Features
 
@@ -34,10 +34,11 @@ running indicators, hover labels, themed tiles, icon tinting, and a settings pop
 omarchy plugin add https://github.com/omiddev9/mac-dock-liquid-glass --enable
 ```
 
-The plugin seeds its default items on first load. Optional extras:
+The plugin seeds a starter set of pinned apps on first use. Optional extras:
 
-- **Blur behind the dock**: copy `hypr/dock.lua` to `~/.config/hypr/dock.lua`
-  and add `pcall(require, "hypr.dock")` to `~/.config/hypr/hyprland.lua`.
+- **Blur behind the dock** — copy `hypr/dock.lua` to
+  `~/.config/hypr/dock.lua` and add `pcall(require, "hypr.dock")` to
+  `~/.config/hypr/hyprland.lua`.
 - **Configurator on PATH**:
   `ln -s ~/.config/omarchy/plugins/io.github.omiddev9.mac-dock-liquid-glass/bin/omarchy-dock-config ~/.local/bin/`
 
@@ -50,8 +51,6 @@ cd ~/src/mac-dock-liquid-glass
 ```
 
 `install.sh` is idempotent, backs up displaced files, and supports `--dry-run`.
-It links the plugin, configurator, and Hyprland settings, then seeds the dock
-entry in `shell.json`.
 
 ## Configure
 
@@ -59,7 +58,7 @@ entry in `shell.json`.
 omarchy-dock-config --help
 ```
 
-Right-click the dock and choose **Settings** for the common options. All writes go
+Right-click the dock and choose **Settings** for common options. All writes go
 through `omarchy-dock-config`, so changes apply immediately.
 
 ## Taskbar styling sync
@@ -78,9 +77,11 @@ Use `./uninstall.sh --purge-config` to also remove the dock entry from
 `shell.json`. The uninstaller only removes links that point back into this
 checkout.
 
+## Author
+
+Omid.Developer
+
 ## License
 
 MIT
-
-Copyright (c) 2026 Omid.Developer
 ```
