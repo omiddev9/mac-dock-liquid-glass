@@ -2,6 +2,8 @@
 
 A high-performance, macOS-style liquid glass dock designed for Omarchy and Hyprland, featuring fluid fisheye magnification, frosted translucent glass surfaces, and rich window controls. Developed by **Omid.Dev**.
 
+![Mac Dock Liquid Glass](mac.webp)
+
 ## Features
 
 - **Liquid Glass Surface**: Frosted translucent glass effect with backdrop blur, dynamic tinting, border glow, and precise corner rounding.
