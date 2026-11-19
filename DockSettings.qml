@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import qs.Commons
@@ -196,6 +197,7 @@ PopupWindow {
 
           // Section wrapper helper
           component SectionBox: Column {
+             id: box
              width: parent.width
              spacing: Style.spacing.sm
              property string title: ""
@@ -216,7 +218,7 @@ PopupWindow {
                  font.family: Style.font.resolvedFamily
                  font.pixelSize: 11
                  font.bold: true
-                 letterSpacing: 1.5
+                 font.letterSpacing: 1.5
                  anchors.verticalCenter: parent.verticalCenter
                }
              }
@@ -247,7 +249,7 @@ PopupWindow {
             Column { width: parent.width; spacing: 16
                // Icon Size Slider
                Column { width: parent.width; spacing: 8
-                 Row { width: parent.width
+                 RowLayout { width: parent.width
                    Text { text: "📐 Icon Size"; font.bold: true; color: Color.popups.text; font.pixelSize: 13 }
                    Item { Layout.fillWidth: true }
                    Rectangle {
@@ -268,7 +270,7 @@ PopupWindow {
 
                // Icon Magnification Slider
                Column { width: parent.width; spacing: 8
-                 Row { width: parent.width
+                 RowLayout { width: parent.width
                    Text { text: "🔍 Magnification Scale"; font.bold: true; color: Color.popups.text; font.pixelSize: 13 }
                    Item { Layout.fillWidth: true }
                    Rectangle {
@@ -369,7 +371,7 @@ PopupWindow {
                }
 
                Column { width: parent.width; spacing: 8; visible: settings.dock.flag("glow", false)
-                 Row { width: parent.width
+                 RowLayout { width: parent.width
                    Text { text: "⚡ Glow Intensity"; font.bold: true; color: Color.popups.text; font.pixelSize: 13 }
                    Item { Layout.fillWidth: true }
                    Rectangle {
@@ -477,7 +479,7 @@ PopupWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: 1
                 Text { text: "Mac Dock Liquid Glass"; color: Color.popups.text; font.pixelSize: 11; font.bold: true }
-                Text { text: "Developed by Omid.Dev"; color: Color.accent; font.pixelSize: 10; font.bold: true }
+                Text { text: "BY Omid.Dev"; color: Color.accent; font.pixelSize: 10; font.bold: true }
               }
             }
           }

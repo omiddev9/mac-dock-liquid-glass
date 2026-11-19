@@ -1824,7 +1824,10 @@ Item {
 
             Rectangle {
               required property int index
-              readonly property int step: modelData
+              // The `Variants` delegate above also defines `modelData` (the
+              // screen), which shadows this Repeater's array element; `index`
+              // is the delegate's own 0..3 step.
+              readonly property int step: index
               x: -1 - step + root.glowShiftX
               y: -1 - step + root.glowShiftY
               width: parent.width + (2 + step * 2)
