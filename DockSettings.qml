@@ -5,19 +5,6 @@ import Quickshell.Hyprland
 import qs.Commons
 import qs.Ui
 
-// Settings popup for the dock, opened from the Omarchy Menu icon's
-// right-click "Settings" row. Anchored exactly like the context menu and
-// held open the same way: a HyprlandFocusGrab routes input to the window
-// and the dock, so clicking anywhere else clears the grab and the popup
-// closes. Controls are grouped under five uppercase section headers —
-// Appearance, Glow, Behaviour, Taskbar sync, Support — each toggle sitting
-// with its dependent control. The appearance section pairs the icon-size and
-// magnification sliders, whose maxima are what the dock reserves window room
-// for while this popup is open, with the Gaussian-zoom curve toggle. Every
-// control writes through the bundled
-// configurator (the `set` subcommand or the atomic `opacity` /
-// `corner-shape` / `glow`-family pushes that mirror the taskbar in the same
-// write), and the shell hot-reloads shell.json on save, so changes land live.
 PopupWindow {
   id: settings
 
@@ -25,22 +12,11 @@ PopupWindow {
 
   property var anchorCell: null
   property bool open: false
-  // Screen position captured on open, so edits that resize the dock card
-  // (icon size, shape) can't re-anchor the popup and make it jump under the
-  // mouse. The dock window has no QML x/y, so its on-screen origin is derived
-  // from edge/align/fullWidth and monitor geometry (windowScreenRect), and
-  // the open-time anchor rect is stored in local terms too. onAnchoring
-  // re-derives the local rect from the current window origin so the popup
-  // stays glued to the screen point it opened on. Stale writes are skipped —
-  // re-committing a popup position every animation frame is what flickers its
-  // border.
   property bool locked: false
   property real lockRX: 0
   property real lockRY: 0
   property real lockScreenX: 0
   property real lockScreenY: 0
-  // Border radius captured on open: matching the dock's current shape without
-  // chasing cardRadius live (which changes with icon size in pill mode).
   property int lockRadius: Style.cornerRadius
 
   function openFor(cell) {
@@ -89,25 +65,18 @@ PopupWindow {
   visible: open
   color: "transparent"
 
-  readonly property int pad: Style.spacing.md
-  readonly property int contentWidth: Style.space(300)
-  readonly property var settingsBorder: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2)))
+  readonly property int pad: Style.spacing.lg
+  readonly property int contentWidth: Style.space(340)
+  readonly property var settingsBorder: Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(1)))
 
-  // The body scrolls inside a fixed cap, so adding rows later never makes
-  // the popup walk up off the screen. When the column fits the cap the box
-  // hugs it (no scrollbar); above it, the box stays put and the column
-  // scrolls. The cap tracks the monitor so a small screen still fits.
   readonly property int bodyHeight: Math.min(column.implicitHeight, maxBodyHeight)
   readonly property int maxBodyHeight: {
     var m = settings.dock.monitorRect(settings.anchorWindowScreenName())
-    if (m) return Math.max(Style.space(280), Math.min(Style.space(620), Math.round(m.height) - Style.space(80)))
-    return Style.space(620)
+    if (m) return Math.max(Style.space(320), Math.min(Style.space(680), Math.round(m.height) - Style.space(80)))
+    return Style.space(680)
   }
 
   implicitWidth: contentWidth + pad * 2 + Border.left(settingsBorder) + Border.right(settingsBorder)
-  // Pinned to the implicit width so a live value label ("42 px") can never
-  // reflow the box. The dock window is frozen (resized to the slider's max)
-  // while this popup is open, so nothing below ever re-sizes it.
   width: contentWidth + pad * 2 + Border.left(settingsBorder) + Border.right(settingsBorder)
   implicitHeight: Math.round(settings.bodyHeight + pad * 2 + Border.top(settingsBorder) + Border.bottom(settingsBorder))
 
@@ -145,8 +114,8 @@ PopupWindow {
   BorderSurface {
     id: card
     anchors.fill: parent
-    radius: settings.lockRadius
-    color: Util.alpha(Color.popups.background, 0.97)
+    radius: settings.lockRadius + 4
+    color: Util.alpha(Color.popups.background, 0.92)
     borderSpec: settings.settingsBorder
 
     ScrollView {
@@ -163,24 +132,43 @@ PopupWindow {
       Column {
         id: column
         width: scroll.availableWidth
-        spacing: Style.spacing.lg
+        spacing: Style.spacing.xl
 
-        Row {
+        // Header Row
+        Item {
           width: settings.contentWidth
-          spacing: Style.spacing.md
+          height: 36
 
-          Text {
-            width: settings.contentWidth - Style.space(40) - Style.spacing.md
+          Row {
             anchors.verticalCenter: parent.verticalCenter
-            text: "Dock Settings"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.body
-            font.bold: true
-            elide: Text.ElideRight
+            spacing: Style.spacing.sm
+
+            Rectangle {
+              width: 24
+              height: 24
+              radius: 6
+              color: Util.alpha(Color.accent, 0.2)
+              anchors.verticalCenter: parent.verticalCenter
+
+              Text {
+                anchors.centerIn: parent
+                text: "✨"
+                font.pixelSize: 12
+              }
+            }
+
+            Text {
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Liquid Glass Dock"
+              color: Color.popups.text
+              font.family: Style.font.resolvedFamily
+              font.pixelSize: Style.font.bodyLarge || 16
+              font.bold: true
+            }
           }
 
           Button {
+            anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             iconText: "✕"
             fontSize: Style.font.body
@@ -190,491 +178,573 @@ PopupWindow {
             accent: Color.accent
             onClicked: settings.close()
           }
-      }
-
-      PanelSeparator {
-        foreground: Color.popups.text
-      }
-
-      PanelSectionHeader {
-        text: "APPEARANCE"
-        foreground: Color.popups.text
-        fontFamily: Style.font.resolvedFamily
-        color: Color.popups.text
-        fontSize: Style.font.body
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.xs
-
-        Row {
-          width: settings.contentWidth
-          spacing: Style.spacing.md
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Icon Size"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: String(Math.round(sizeSlider.liveValue)) + " px"
-            color: Util.alpha(Color.popups.text, 0.6)
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.caption
-          }
         }
 
-        DragSlider {
-          id: sizeSlider
-          width: settings.contentWidth
-          minimum: 24
-          maximum: 96
-          step: 2
-          integer: true
-          value: settings.dock.num("iconSize", 44)
-          fillColor: Color.accent
-          knobColor: Color.accent
-          onReleased: function(v) {
-            settings.dock.applySetting("iconSize", String(Math.round(v)))
-          }
-        }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.xs
-
-        Row {
-          width: settings.contentWidth
-          spacing: Style.spacing.md
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Icon magnification"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: String(Math.round(zoomSlider.liveValue)) + "%"
-            color: Util.alpha(Color.popups.text, 0.6)
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.caption
-          }
-        }
-
-        DragSlider {
-          id: zoomSlider
-          width: settings.contentWidth
-          minimum: 0
-          maximum: 100
-          step: 5
-          integer: true
-          value: Math.round(settings.dock.fraction("zoom", 0.48) * 100)
-          fillColor: Color.accent
-          knobColor: Color.accent
-          onReleased: function(v) {
-            settings.dock.applySetting("zoom", String(v / 100))
-          }
-        }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Gaussian zoom"
-        description: "Bell-curve falloff instead of the quadratic fishbowl."
-        stored: settings.dock.flag("gaussianZoom", true)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) { settings.dock.applySetting("gaussianZoom", String(v)) }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.xs
-
-        Row {
-          width: settings.contentWidth
-          spacing: Style.spacing.md
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Background opacity"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: Math.round(bgOpacitySlider.liveValue) + "%"
-            color: Util.alpha(Color.popups.text, 0.6)
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.caption
-          }
-        }
-
-        DragSlider {
-          id: bgOpacitySlider
-          width: settings.contentWidth
-          minimum: 0
-          maximum: 100
-          step: 5
-          integer: true
-          value: Math.round(settings.dock.fraction("backgroundOpacity", 1.0) * 100)
-          fillColor: Color.accent
-          knobColor: Color.accent
-          onReleased: function(v) {
-            Util.execDetached(settings.dock.configCmd + " opacity " + Util.shellQuote(String(v / 100)))
-          }
-        }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.sm
-
-        Text {
-          width: settings.contentWidth
-          text: "Corner Shape"
-          color: Color.popups.text
-          font.family: Style.font.resolvedFamily
-          font.pixelSize: Style.font.bodySmall
-        }
-
-        ButtonGroup {
-          options: [
-            { value: "rounded", label: "Rounded" },
-            { value: "square", label: "Square" },
-            { value: "pill", label: "Pill" }
-          ]
-          value: settings.dock.cornerShape
-          foreground: Color.popups.text
-          background: Color.popups.background
-          accent: Color.accent
-          onChanged: function(v) {
-            Util.execDetached(settings.dock.configCmd + " corner-shape " + Util.shellQuote(String(v)))
-          }
-        }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.sm
-
-        Text {
-          width: settings.contentWidth
-          text: "Position"
-          color: Color.popups.text
-          font.family: Style.font.resolvedFamily
-          font.pixelSize: Style.font.bodySmall
-        }
-
-        ButtonGroup {
-          options: [
-            { value: "bottom", label: "Bottom" },
-            { value: "top", label: "Top" },
-            { value: "left", label: "Left" },
-            { value: "right", label: "Right" }
-          ]
-          value: settings.dock.edge
-          foreground: Color.popups.text
-          background: Color.popups.background
-          accent: Color.accent
-          onChanged: function(v) {
-            settings.dock.applySetting("edge", JSON.stringify(String(v)))
-          }
-        }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Full length"
-        description: "Span the whole edge of the screen."
-        stored: settings.dock.flag("fullWidth", false)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) { settings.dock.applySetting("fullWidth", String(v)) }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Border"
-        description: "Outline around the dock card."
-        stored: settings.dock.flag("border", true)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) { settings.dock.applySetting("border", String(v)) }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.xs
-
-        Row {
-          width: settings.contentWidth
-          spacing: Style.spacing.md
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Border opacity"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: Math.round(borderOpacitySlider.liveValue) + "%"
-            color: Util.alpha(Color.popups.text, 0.6)
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.caption
-          }
-        }
-
-        DragSlider {
-          id: borderOpacitySlider
-          width: settings.contentWidth
-          minimum: 0
-          maximum: 100
-          step: 5
-          integer: true
-          value: Math.round(settings.dock.fraction("borderOpacity", 1.0) * 100)
-          fillColor: Color.accent
-          knobColor: Color.accent
-          onReleased: function(v) {
-            settings.dock.applySetting("borderOpacity", String(v / 100))
-          }
-        }
-      }
-
-      PanelSeparator {
-        foreground: Color.popups.text
-      }
-
-      PanelSectionHeader {
-        text: "GLOW"
-        foreground: Color.popups.text
-        fontFamily: Style.font.resolvedFamily
-        color: Color.popups.text
-        fontSize: Style.font.body
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Border glow"
-        description: "Soft halo blooming out from the dock's border."
-        stored: settings.dock.flag("glow", false)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) {
-          Util.execDetached(settings.dock.configCmd + " glow " + (v ? "true" : "false"))
-        }
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.lg
-        visible: settings.dock.flag("glow", false)
-
+        // Section builder helper component concept inline
+        // APPEARANCE
         Column {
           width: settings.contentWidth
-          spacing: Style.spacing.xs
+          spacing: Style.spacing.md
 
           Row {
+            spacing: 6
+            Text {
+              text: "APPEARANCE"
+              color: Color.accent
+              font.family: Style.font.resolvedFamily
+              font.pixelSize: Style.font.caption || 11
+              font.bold: true
+              letterSpacing: 1.2
+            }
+          }
+
+          // Card Container for Appearance
+          Rectangle {
             width: settings.contentWidth
-            spacing: Style.spacing.md
+            height: appearanceCol.implicitHeight + 24
+            radius: 12
+            color: Util.alpha(Color.popups.text, 0.04)
+            border.width: 1
+            border.color: Util.alpha(Color.popups.text, 0.08)
+
+            Column {
+              id: appearanceCol
+              x: 12; y: 12
+              width: settings.contentWidth - 24
+              spacing: Style.spacing.md
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+
+                Row {
+                  width: parent.width
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Icon Size"
+                    color: Color.popups.text
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.bodySmall
+                    font.bold: true
+                  }
+                  Item { width: 1; height: 1; Layout.fillWidth: true }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: String(Math.round(sizeSlider.liveValue)) + " px"
+                    color: Util.alpha(Color.popups.text, 0.6)
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.caption
+                  }
+                }
+
+                DragSlider {
+                  id: sizeSlider
+                  width: parent.width
+                  minimum: 24
+                  maximum: 96
+                  step: 2
+                  integer: true
+                  value: settings.dock.num("iconSize", 44)
+                  fillColor: Color.accent
+                  knobColor: Color.accent
+                  onReleased: function(v) {
+                    settings.dock.applySetting("iconSize", String(Math.round(v)))
+                  }
+                }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+
+                Row {
+                  width: parent.width
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Icon Magnification"
+                    color: Color.popups.text
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.bodySmall
+                    font.bold: true
+                  }
+                  Item { width: 1; height: 1; Layout.fillWidth: true }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: String(Math.round(zoomSlider.liveValue)) + "%"
+                    color: Util.alpha(Color.popups.text, 0.6)
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.caption
+                  }
+                }
+
+                DragSlider {
+                  id: zoomSlider
+                  width: parent.width
+                  minimum: 0
+                  maximum: 100
+                  step: 5
+                  integer: true
+                  value: Math.round(settings.dock.fraction("zoom", 0.48) * 100)
+                  fillColor: Color.accent
+                  knobColor: Color.accent
+                  onReleased: function(v) {
+                    settings.dock.applySetting("zoom", String(v / 100))
+                  }
+                }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Gaussian Zoom"
+                description: "Bell-curve falloff instead of fishbowl."
+                stored: settings.dock.flag("gaussianZoom", true)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) { settings.dock.applySetting("gaussianZoom", String(v)) }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+
+                Row {
+                  width: parent.width
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Background Opacity"
+                    color: Color.popups.text
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.bodySmall
+                    font.bold: true
+                  }
+                  Item { width: 1; height: 1; Layout.fillWidth: true }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.round(bgOpacitySlider.liveValue) + "%"
+                    color: Util.alpha(Color.popups.text, 0.6)
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.caption
+                  }
+                }
+
+                DragSlider {
+                  id: bgOpacitySlider
+                  width: parent.width
+                  minimum: 0
+                  maximum: 100
+                  step: 5
+                  integer: true
+                  value: Math.round(settings.dock.fraction("backgroundOpacity", 1.0) * 100)
+                  fillColor: Color.accent
+                  knobColor: Color.accent
+                  onReleased: function(v) {
+                    Util.execDetached(settings.dock.configCmd + " opacity " + Util.shellQuote(String(v / 100)))
+                  }
+                }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+
+                Text {
+                  width: parent.width
+                  text: "Corner Shape"
+                  color: Color.popups.text
+                  font.family: Style.font.resolvedFamily
+                  font.pixelSize: Style.font.bodySmall
+                  font.bold: true
+                }
+
+                ButtonGroup {
+                  options: [
+                    { value: "rounded", label: "Rounded" },
+                    { value: "square", label: "Square" },
+                    { value: "pill", label: "Pill" }
+                  ]
+                  value: settings.dock.cornerShape
+                  foreground: Color.popups.text
+                  background: Color.popups.background
+                  accent: Color.accent
+                  onChanged: function(v) {
+                    Util.execDetached(settings.dock.configCmd + " corner-shape " + Util.shellQuote(String(v)))
+                  }
+                }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+
+                Text {
+                  width: parent.width
+                  text: "Position"
+                  color: Color.popups.text
+                  font.family: Style.font.resolvedFamily
+                  font.pixelSize: Style.font.bodySmall
+                  font.bold: true
+                }
+
+                ButtonGroup {
+                  options: [
+                    { value: "bottom", label: "Bottom" },
+                    { value: "top", label: "Top" },
+                    { value: "left", label: "Left" },
+                    { value: "right", label: "Right" }
+                  ]
+                  value: settings.dock.edge
+                  foreground: Color.popups.text
+                  background: Color.popups.background
+                  accent: Color.accent
+                  onChanged: function(v) {
+                    settings.dock.applySetting("edge", JSON.stringify(String(v)))
+                  }
+                }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Full Length"
+                description: "Span the whole edge of the screen."
+                stored: settings.dock.flag("fullWidth", false)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) { settings.dock.applySetting("fullWidth", String(v)) }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Border Outline"
+                description: "Subtle stroke around the dock card."
+                stored: settings.dock.flag("border", true)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) { settings.dock.applySetting("border", String(v)) }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.xs
+                visible: settings.dock.flag("border", true)
+
+                Row {
+                  width: parent.width
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Border Opacity"
+                    color: Color.popups.text
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.bodySmall
+                    font.bold: true
+                  }
+                  Item { width: 1; height: 1; Layout.fillWidth: true }
+                  Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.round(borderOpacitySlider.liveValue) + "%"
+                    color: Util.alpha(Color.popups.text, 0.6)
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.caption
+                  }
+                }
+
+                DragSlider {
+                  id: borderOpacitySlider
+                  width: parent.width
+                  minimum: 0
+                  maximum: 100
+                  step: 5
+                  integer: true
+                  value: Math.round(settings.dock.fraction("borderOpacity", 1.0) * 100)
+                  fillColor: Color.accent
+                  knobColor: Color.accent
+                  onReleased: function(v) {
+                    settings.dock.applySetting("borderOpacity", String(v / 100))
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // GLOW
+        Column {
+          width: settings.contentWidth
+          spacing: Style.spacing.md
+
+          Row {
+            spacing: 6
+            Text {
+              text: "GLOW & LIGHTING"
+              color: Color.accent
+              font.family: Style.font.resolvedFamily
+              font.pixelSize: Style.font.caption || 11
+              font.bold: true
+              letterSpacing: 1.2
+            }
+          }
+
+          Rectangle {
+            width: settings.contentWidth
+            height: glowCol.implicitHeight + 24
+            radius: 12
+            color: Util.alpha(Color.popups.text, 0.04)
+            border.width: 1
+            border.color: Util.alpha(Color.popups.text, 0.08)
+
+            Column {
+              id: glowCol
+              x: 12; y: 12
+              width: settings.contentWidth - 24
+              spacing: Style.spacing.md
+
+              DockToggle {
+                width: parent.width
+                label: "Border Glow"
+                description: "Soft halo blooming out from the dock."
+                stored: settings.dock.flag("glow", false)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) {
+                  Util.execDetached(settings.dock.configCmd + " glow " + (v ? "true" : "false"))
+                }
+              }
+
+              Column {
+                width: parent.width
+                spacing: Style.spacing.md
+                visible: settings.dock.flag("glow", false)
+
+                Column {
+                  width: parent.width
+                  spacing: Style.spacing.xs
+
+                  Row {
+                    width: parent.width
+                    Text {
+                      anchors.verticalCenter: parent.verticalCenter
+                      text: "Glow Strength"
+                      color: Color.popups.text
+                      font.family: Style.font.resolvedFamily
+                      font.pixelSize: Style.font.bodySmall
+                      font.bold: true
+                    }
+                    Item { width: 1; height: 1; Layout.fillWidth: true }
+                    Text {
+                      anchors.verticalCenter: parent.verticalCenter
+                      text: Math.round(glowStrengthSlider.liveValue) + "%"
+                      color: Util.alpha(Color.popups.text, 0.6)
+                      font.family: Style.font.resolvedFamily
+                      font.pixelSize: Style.font.caption
+                    }
+                  }
+
+                  DragSlider {
+                    id: glowStrengthSlider
+                    width: parent.width
+                    minimum: 0
+                    maximum: 100
+                    step: 5
+                    integer: true
+                    value: Math.round(settings.dock.fraction("glowAmount", 0.5) * 100)
+                    fillColor: Color.accent
+                    knobColor: Color.accent
+                    onReleased: function(v) {
+                      Util.execDetached(settings.dock.configCmd + " glow-amount " + Util.shellQuote(String(v / 100)))
+                    }
+                  }
+                }
+
+                Column {
+                  width: parent.width
+                  spacing: Style.spacing.xs
+
+                  Text {
+                    width: parent.width
+                    text: "Glow Focus"
+                    color: Color.popups.text
+                    font.family: Style.font.resolvedFamily
+                    font.pixelSize: Style.font.bodySmall
+                    font.bold: true
+                  }
+
+                  ButtonGroup {
+                    options: [
+                      { value: "full", label: "Full" },
+                      { value: "top", label: "Top" },
+                      { value: "bottom", label: "Bottom" }
+                    ]
+                    value: {
+                      var focus = String(settings.dock.config.glowFocus || "")
+                      return (focus === "bottom" || focus === "top") ? focus : "full"
+                    }
+                    foreground: Color.popups.text
+                    background: Color.popups.background
+                    accent: Color.accent
+                    onChanged: function(v) {
+                      Util.execDetached(settings.dock.configCmd + " glow-focus " + Util.shellQuote(String(v)))
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // BEHAVIOUR
+        Column {
+          width: settings.contentWidth
+          spacing: Style.spacing.md
+
+          Row {
+            spacing: 6
+            Text {
+              text: "BEHAVIOUR"
+              color: Color.accent
+              font.family: Style.font.resolvedFamily
+              font.pixelSize: Style.font.caption || 11
+              font.bold: true
+              letterSpacing: 1.2
+            }
+          }
+
+          Rectangle {
+            width: settings.contentWidth
+            height: behaviorCol.implicitHeight + 24
+            radius: 12
+            color: Util.alpha(Color.popups.text, 0.04)
+            border.width: 1
+            border.color: Util.alpha(Color.popups.text, 0.08)
+
+            Column {
+              id: behaviorCol
+              x: 12; y: 12
+              width: settings.contentWidth - 24
+              spacing: Style.spacing.md
+
+              DockToggle {
+                width: parent.width
+                label: "Auto-hide"
+                description: "Slide off-screen until edge is brushed."
+                stored: settings.dock.flag("autohide", true)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) { settings.dock.applySetting("autohide", String(v)) }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Hover Tooltips"
+                description: "Show icon names on hover."
+                stored: settings.dock.flag("tooltips", true)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) { settings.dock.applySetting("tooltips", String(v)) }
+              }
+            }
+          }
+        }
+
+        // TASKBAR SYNC
+        Column {
+          width: settings.contentWidth
+          spacing: Style.spacing.md
+
+          Row {
+            spacing: 6
+            Text {
+              text: "TASKBAR SYNC"
+              color: Color.accent
+              font.family: Style.font.resolvedFamily
+              font.pixelSize: Style.font.caption || 11
+              font.bold: true
+              letterSpacing: 1.2
+            }
+          }
+
+          Rectangle {
+            width: settings.contentWidth
+            height: taskbarCol.implicitHeight + 24
+            radius: 12
+            color: Util.alpha(Color.popups.text, 0.04)
+            border.width: 1
+            border.color: Util.alpha(Color.popups.text, 0.08)
+
+            Column {
+              id: taskbarCol
+              x: 12; y: 12
+              width: settings.contentWidth - 24
+              spacing: Style.spacing.md
+
+              DockToggle {
+                width: parent.width
+                label: "Sync Opacity"
+                description: "Mirror dock opacity onto the taskbar."
+                stored: settings.dock.flag("matchBarOpacity", false)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) {
+                  Util.execDetached(settings.dock.configCmd + " matchbar-opacity " + (v ? "true" : "false"))
+                }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Sync Corners"
+                description: "Mirror dock corner shape onto taskbar."
+                stored: settings.dock.flag("matchBarCorners", false)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) {
+                  Util.execDetached(settings.dock.configCmd + " matchbar-corners " + (v ? "true" : "false"))
+                }
+              }
+
+              DockToggle {
+                width: parent.width
+                label: "Sync Glow"
+                description: "Mirror dock border glow onto taskbar."
+                stored: settings.dock.flag("matchBarGlow", false)
+                foreground: Color.popups.text
+                accent: Color.accent
+                onRequestWrite: function(v) {
+                  Util.execDetached(settings.dock.configCmd + " matchbar-glow " + (v ? "true" : "false"))
+                }
+              }
+            }
+          }
+        }
+
+        // DEVELOPER INFO / FOOTER
+        Rectangle {
+          width: settings.contentWidth
+          height: 48
+          radius: 12
+          color: Util.alpha(Color.accent, 0.08)
+          border.width: 1
+          border.color: Util.alpha(Color.accent, 0.2)
+
+          Row {
+            anchors.centerIn: parent
+            spacing: 8
 
             Text {
               anchors.verticalCenter: parent.verticalCenter
-              text: "Glow strength"
+              text: "⚡"
+              font.pixelSize: 13
+            }
+
+            Text {
+              anchors.verticalCenter: parent.verticalCenter
+              text: "Developed by Omid.Dev"
               color: Color.popups.text
               font.family: Style.font.resolvedFamily
               font.pixelSize: Style.font.bodySmall
-            }
-
-            Text {
-              anchors.verticalCenter: parent.verticalCenter
-              text: Math.round(glowStrengthSlider.liveValue) + "%"
-              color: Util.alpha(Color.popups.text, 0.6)
-              font.family: Style.font.resolvedFamily
-              font.pixelSize: Style.font.caption
-            }
-          }
-
-          DragSlider {
-            id: glowStrengthSlider
-            width: settings.contentWidth
-            minimum: 0
-            maximum: 100
-            step: 5
-            integer: true
-            value: Math.round(settings.dock.fraction("glowAmount", 0.5) * 100)
-            fillColor: Color.accent
-            knobColor: Color.accent
-            onReleased: function(v) {
-            Util.execDetached(settings.dock.configCmd + " glow-amount " + Util.shellQuote(String(v / 100)))
-          }
-          }
-        }
-
-        Column {
-          width: settings.contentWidth
-          spacing: Style.spacing.sm
-
-          Text {
-            width: settings.contentWidth
-            text: "Glow focus"
-            color: Color.popups.text
-            font.family: Style.font.resolvedFamily
-            font.pixelSize: Style.font.bodySmall
-          }
-
-          ButtonGroup {
-            options: [
-              { value: "full", label: "Full" },
-              { value: "top", label: "Top" },
-              { value: "bottom", label: "Bottom" }
-            ]
-            value: {
-              var focus = String(settings.dock.config.glowFocus || "")
-              return (focus === "bottom" || focus === "top") ? focus : "full"
-            }
-            foreground: Color.popups.text
-            background: Color.popups.background
-            accent: Color.accent
-            onChanged: function(v) {
-              Util.execDetached(settings.dock.configCmd + " glow-focus " + Util.shellQuote(String(v)))
+              font.bold: true
             }
           }
         }
+
       }
-
-      PanelSeparator {
-        foreground: Color.popups.text
-      }
-
-      PanelSectionHeader {
-        text: "BEHAVIOUR"
-        foreground: Color.popups.text
-        fontFamily: Style.font.resolvedFamily
-        color: Color.popups.text
-        fontSize: Style.font.body
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Auto-hide"
-        description: "Slide the dock off-screen until the edge is brushed."
-        stored: settings.dock.flag("autohide", true)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) { settings.dock.applySetting("autohide", String(v)) }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Show icon name on hover"
-        description: "Show the icon's name when hovering over it."
-        stored: settings.dock.flag("tooltips", true)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) { settings.dock.applySetting("tooltips", String(v)) }
-      }
-
-      PanelSeparator {
-        foreground: Color.popups.text
-      }
-
-      PanelSectionHeader {
-        text: "TASKBAR SYNC"
-        foreground: Color.popups.text
-        fontFamily: Style.font.resolvedFamily
-        color: Color.popups.text
-        fontSize: Style.font.body
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Sync taskbar opacity"
-        description: "Make the taskbar's background as opaque as the dock's."
-        stored: settings.dock.flag("matchBarOpacity", false)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) {
-          Util.execDetached(settings.dock.configCmd + " matchbar-opacity " + (v ? "true" : "false"))
-        }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Sync taskbar corners"
-        description: "Give the taskbar the dock's corner shape (rounded, square or pill)."
-        stored: settings.dock.flag("matchBarCorners", false)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) {
-          Util.execDetached(settings.dock.configCmd + " matchbar-corners " + (v ? "true" : "false"))
-        }
-      }
-
-      DockToggle {
-        width: settings.contentWidth
-        label: "Sync taskbar glow"
-        description: "Give the taskbar the dock's border glow."
-        stored: settings.dock.flag("matchBarGlow", false)
-        foreground: Color.popups.text
-        accent: Color.accent
-        onRequestWrite: function(v) {
-          Util.execDetached(settings.dock.configCmd + " matchbar-glow " + (v ? "true" : "false"))
-        }
-      }
-
-      PanelSeparator {
-        foreground: Color.popups.text
-      }
-
-      PanelSectionHeader {
-        text: "SUPPORT"
-        foreground: Color.popups.text
-        fontFamily: Style.font.resolvedFamily
-        color: Color.popups.text
-        fontSize: Style.font.body
-      }
-
-      Column {
-        width: settings.contentWidth
-        spacing: Style.spacing.sm
-
-        Text {
-          width: settings.contentWidth
-          text: "Support"
-          color: Color.popups.text
-          font.family: Style.font.resolvedFamily
-          font.pixelSize: Style.font.bodySmall
-        }
-
-        Button {
-          width: settings.contentWidth
-          iconText: "☕"
-          text: "Support me on Ko-fi"
-          foreground: Color.popups.text
-          accent: Color.accent
-          onClicked: {
-            settings.close()
-            Util.execDetached("xdg-open https://ko-fi.com/davedes")
-          }
-        }
-      }
-
     }
   }
-}
 }
