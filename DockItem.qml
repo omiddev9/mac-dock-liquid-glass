@@ -317,18 +317,20 @@ Item {
   // Steps accumulate across quiet deltas; each full step activates the next
   // window, and a transient label names it. With one window or a launch-only
   // icon, scrolling still pulses the label.
+  // The id must not be `wheel`: WheelHandler already has a `wheel` signal,
+  // and shadowing it makes the handler's own signal unreachable.
   WheelHandler {
-    id: wheel
+    id: wheelHandler
     enabled: !cell.isRule
     property real accum: 0
 
     onWheel: function(event) {
       var d = event.angleDelta.y || event.angleDelta.x
       if (d === 0) return
-      wheel.accum += d / 120
-      var steps = Math.trunc(wheel.accum)
+      wheelHandler.accum += d / 120
+      var steps = Math.trunc(wheelHandler.accum)
       if (steps === 0) return
-      wheel.accum -= steps
+      wheelHandler.accum -= steps
       cell.dock.cycleWindows(cell, steps)
     }
   }
