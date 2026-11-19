@@ -180,17 +180,49 @@ Item {
     return wins
   }
 
+  // Windows report whatever their toolkit felt like: Discord/Electron apps
+  // send a scoped package id ("@codebuff/freebuff-desktop"), others send a
+  // full reverse-domain id or a bare binary name. The desktop entry that
+  // started them is usually the plain id ("freebuff"), so comparing ids
+  // alone leaves those windows with a fallback glyph instead of their icon.
+  // Fold both sides to a comparable shape: drop a scope/path prefix, drop a
+  // trailing -desktop/-client/-bin, then keep only letters and digits.
+  // "freebuff-clone" stays distinct from "freebuff", so a second profile's
+  // window can never steal the original's entry.
+  function shapeKey(s) {
+    var out = String(s || "").toLowerCase().replace(/\.desktop$/, "")
+    var slash = out.lastIndexOf("/")
+    if (slash >= 0) out = out.slice(slash + 1)
+    out = out.replace(/^@/, "")
+    out = out.replace(/([-_.](desktop|client|bin))$/, "")
+    return out.replace(/[^a-z0-9]/g, "")
+  }
+
   // Desktop entry for a bare appId, for the running section's icon and
   // label. heuristicLookup handles the messy real-world cases; the manual
-  // scan backstops it with the same canonical compare used everywhere else.
+  // scan backstops it with the same canonical compare used everywhere else,
+  // then with the folded shape above for ids that share no literal prefix
+  // with their entry ("@scope/app-desktop" vs "app").
   function entryFor(appId) {
     var e = null
     try { e = DesktopEntries.heuristicLookup(appId) } catch (err) { e = null }
     if (e) return e
     var values = (DesktopEntries.applications && DesktopEntries.applications.values) || []
+    // An entry's own declaration of its window class is better evidence
+    // than any guess from its id.
     for (var i = 0; i < values.length; i++) {
-      var id = String(values[i].id || "").replace(/\.desktop$/, "")
-      if (idMatch(id, appId)) return values[i]
+      var sc = String(values[i].startupClass || "")
+      if (sc && canon(sc) === canon(appId)) return values[i]
+    }
+    for (var j = 0; j < values.length; j++) {
+      var id = String(values[j].id || "").replace(/\.desktop$/, "")
+      if (idMatch(id, appId)) return values[j]
+    }
+    var want = shapeKey(appId)
+    if (!want) return null
+    for (var k = 0; k < values.length; k++) {
+      var did = String(values[k].id || "").replace(/\.desktop$/, "")
+      if (shapeKey(did) === want) return values[k]
     }
     return null
   }
