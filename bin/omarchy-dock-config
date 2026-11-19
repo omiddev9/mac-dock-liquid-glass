@@ -24,7 +24,7 @@ DOCK='(.plugins[] | select(.id=="io.github.omiddev9.mac-dock-liquid-glass"))'
 # is the only place the dock's settings live and which the whole shell reads.
 # The --help output prints this same list, so the two cannot drift.
 KNOWN_KEYS=(
-  align animation autohide backgroundOpacity border borderOpacity cornerRadius
+  align animation autohide backgroundOpacity border borderColor borderOpacity cornerRadius
   cornerShape dodge edge edgeGap fullWidth gaussianZoom glass glassColor glassEdge
   glassRadius glassTint glyphColor glyphScale hideDelay hotspotFullWidth
   hotspotHeight iconOpacity iconSize labels macIconTheme macIcons magnify

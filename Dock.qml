@@ -243,13 +243,44 @@ Item {
   // Animation length of the reflow, ms.
   readonly property int animMs: Math.round(num0("animation", 110))
 
-  // The slider's 0–1 override is applied on top of the theme's border color
-  // (RGB preserved, alpha forced), so the label matches what renders.
+  // The slider's 0–1 override is applied on top of the border color (RGB
+  // preserved, alpha forced), so the label matches what renders.
   readonly property real borderOpacity: fraction("borderOpacity", 1.0)
+
+  // `borderColor` overrides the theme's popup border for the dock's own ring.
+  // Without it the theme token wins and a blue-accent theme paints a blue
+  // border nobody can change from the settings popup; with it the ring is
+  // "theme", "accent", "white", "black", "none", or any #rrggbb.
+  readonly property string borderColorChoice: String(config.borderColor || "").trim().toLowerCase()
+  readonly property bool borderColorOverridden: borderColorChoice !== "" && borderColorChoice !== "theme"
+
+  QtObject {
+    id: borderPaint
+
+    readonly property color hex: /^#[0-9a-f]{6}([0-9a-f]{2})?$/.test(root.borderColorChoice)
+      ? root.borderColorChoice : "transparent"
+    readonly property color resolved:
+      root.borderColorChoice === "accent" ? Color.accent
+      : root.borderColorChoice === "white" ? "#ffffff"
+      : root.borderColorChoice === "black" ? "#000000"
+      : root.borderColorChoice === "none" ? "transparent"
+      : hex.a > 0 ? hex
+      : Color.popups.border
+  }
+
+  // The theme's own ring (widths, gradient, colour), and the ring actually
+  // drawn: the theme's when no colour was picked, a flat ring in the picked
+  // colour otherwise — surfaceSpec() only falls back to the colour argument
+  // when the theme has no token, so an override has to replace the spec.
+  readonly property var themeBorderSpec: Border.surfaceSpec("popups", "border",
+    Color.popups.border, Math.max(1, Style.space(2)))
+  readonly property var borderSpecBase: root.borderColorOverridden
+    ? Border.flat(borderPaint.resolved, Border.uniformWidth(root.themeBorderSpec))
+    : root.themeBorderSpec
   readonly property var dockBorder: flag("border", true)
     ? (root.borderOpacity < 1
-      ? withBorderOpacity(Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2))), root.borderOpacity)
-      : Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2))))
+      ? withBorderOpacity(root.borderSpecBase, root.borderOpacity)
+      : root.borderSpecBase)
     : Border.none()
   readonly property var tipBorder: Border.surfaceSpec("tooltip", "border", Color.tooltip.border, Math.max(1, Style.space(1)))
 
@@ -266,8 +297,9 @@ Item {
   // "top" toward the opposite side; anything else keeps it evenly all round.
   readonly property real glowShift: String(config.glowFocus || "") === "bottom" ? 1
     : String(config.glowFocus || "") === "top" ? -1 : 0
-  readonly property color glowColor: Border.color(
-    Border.surfaceSpec("popups", "border", Color.popups.border, Math.max(1, Style.space(2))))
+  readonly property color glowColor: root.borderColorOverridden
+    ? borderPaint.resolved
+    : Border.color(root.themeBorderSpec)
   // How far past the card the halo may bloom; the window reserves this much
   // room so the glow is never clipped by the surface edge.
   readonly property int glowRoom: glowEnabled ? Math.max(1, Style.space(10)) : 0
