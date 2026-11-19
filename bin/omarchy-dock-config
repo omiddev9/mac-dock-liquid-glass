@@ -30,7 +30,7 @@ KNOWN_KEYS=(
   hotspotHeight iconOpacity iconSize labels macIconTheme macIcons magnify
   matchBarCorners matchBarGlow matchBarOpacity monochrome padding pressure
   revealDelay runningIndicator showRunning showWhenEmpty spacing tileInset
-  tileOpacity tileRadius tiles tintIcons tintRunning tooltips zoom zoomRaise
+  tileOpacity tileRadius tiles tintIcons tintRunning tooltips windowPreview zoom zoomRaise
 )
 # The plugin's own dir, resolved through any symlink (the configurator is
 # often linked into ~/.local/bin), so the bundled style defaults travel with

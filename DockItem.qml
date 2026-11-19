@@ -125,6 +125,14 @@ Item {
     NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
   }
 
+  Timer {
+    id: previewTimer
+    interval: 380
+    onTriggered: {
+      if (iconHover.hovered && !cell.dock.dragging && !cell.dock.menuOpen) cell.dock.openPreview(cell)
+    }
+  }
+
   Component.onCompleted: dock.registerCell(cell)
   Component.onDestruction: {
     dock.unregisterCell(cell)
@@ -278,8 +286,11 @@ Item {
         cell.dock.hoveredLabel = cell.label
         var c = cell.mapToItem(null, cell.width / 2, cell.height / 2)
         cell.dock.hoveredCenter = cell.dock.vertical ? c.y : c.x
+        if (cell.wins && cell.wins.length > 0) previewTimer.restart()
       } else {
         if (cell.dock.hoveredLabel === cell.label) cell.dock.hoveredLabel = ""
+        previewTimer.stop()
+        if (cell.dock.previewOpen && cell.dock.windowPreview.anchorCell === cell) cell.dock.closePreview()
       }
     }
 

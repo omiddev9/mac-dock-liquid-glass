@@ -225,6 +225,7 @@ Item {
   readonly property bool monochrome: flag("monochrome", false)
 
   readonly property bool labels: flag("labels", true)
+  readonly property bool windowPreview: flag("windowPreview", true)
   readonly property bool magnify: flag("magnify", true)
   readonly property bool showWhenEmpty: flag("showWhenEmpty", false)
   readonly property bool hotspotFullWidth: flag("hotspotFullWidth", false)
@@ -359,13 +360,20 @@ Item {
     dock: root
   }
 
+  WindowPreview {
+    id: windowPreview
+    dock: root
+  }
+
   readonly property bool menuOpen: contextMenu.open
   readonly property bool settingsOpen: settingsWindow.open
   readonly property int menuIndex: menuOpen && contextMenu.anchorCell ? contextMenu.anchorCell.index : -1
   // Anything that holds the dock revealed while it's up.
-  readonly property bool popupOpen: menuOpen || settingsOpen
+  readonly property bool popupOpen: menuOpen || settingsOpen || previewOpen
+  property bool previewOpen: false
 
   function openMenu(cell) {
+    closePreview()
     if (!cell || cell.isRule) return
     if (menuOpen && cell.index === menuIndex) {
       contextMenu.close()
@@ -375,6 +383,22 @@ Item {
   }
 
   function closeMenu() { contextMenu.close() }
+
+  function openPreview(cell) {
+    if (!root.windowPreview) return
+    if (!cell || cell.isRule) return
+    if (cell.wins === undefined || !cell.wins || cell.wins.length === 0) return
+    if (menuOpen || settingsOpen) return
+    if (windowPreview.open && windowPreview.anchorCell === cell) return
+    if (windowPreview.open) windowPreview.close()
+    windowPreview.openFor(cell)
+  }
+
+  function closePreview() {
+    if (windowPreview.open) windowPreview.close()
+  }
+
+
 
   // After a click-and-hold opens the menu, continued motion across the
   // card's inward face is a menu gesture, not a drag — the cell disables its
@@ -594,6 +618,7 @@ Item {
   function beginDrag(cell, sceneX, sceneY) {
     contextMenu.close()
     settingsWindow.close()
+    closePreview()
     var r = mainCoord(cell, sceneX, sceneY)
     dragGrabD = r - (vertical ? cell.y : cell.x)
     dragPointer = r
