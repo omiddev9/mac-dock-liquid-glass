@@ -29,6 +29,9 @@ PopupWindow {
     }
     settings.open = true
     settings.dock.holdForPopup()
+    // The first frame is measured with an empty content column; re-anchor once
+    // the real size is known so a tall panel still opens on screen.
+    Qt.callLater(settings.anchor.updateAnchor)
   }
 
   function anchorWindowScreenName() {
@@ -55,6 +58,10 @@ PopupWindow {
     }
     settings.lockRadius = Math.min(settings.dock.cardRadius, Style.cornerRadius)
     settings.locked = true
+    // A re-lock after the first layout has to tell the compositor where the
+    // anchor moved to; otherwise the surface stays where the pre-layout
+    // (sliver-sized) measurement put it.
+    if (settings.open) settings.anchor.updateAnchor()
   }
 
   function close() {
@@ -62,6 +69,13 @@ PopupWindow {
     settings.open = false
     settings.dock.popupReleased()
   }
+
+  // The anchor point is derived from the popup's own size, and the first open
+  // happens before the content has been laid out — implicitHeight is still 0
+  // at that moment, so a tall panel was anchored as if it were a sliver and
+  // parked off-screen. Re-lock once the measured size settles.
+  onImplicitHeightChanged: if (settings.open && settings.locked) settings.lockAtAnchor()
+  onImplicitWidthChanged: if (settings.open && settings.locked) settings.lockAtAnchor()
 
   visible: open
   color: "transparent"
@@ -73,8 +87,11 @@ PopupWindow {
   readonly property int bodyHeight: Math.min(column.implicitHeight, maxBodyHeight)
   readonly property int maxBodyHeight: {
     var m = settings.dock.monitorRect(settings.anchorWindowScreenName())
-    if (m) return Math.max(Style.space(320), Math.min(Style.space(700), Math.round(m.height) - Style.space(80)))
-    return Style.space(700)
+    // Cap the body so the popup still fits in the space above the dock: the
+    // whole panel is anchored to the dock's inward face, and a body as tall as
+    // the monitor put the top edge (and half the controls) off screen.
+    if (m) return Math.max(Style.space(320), Math.min(Style.space(560), Math.round(m.height) - Style.space(180)))
+    return Style.space(560)
   }
 
   implicitWidth: contentWidth + pad * 2 + Border.left(settingsBorder) + Border.right(settingsBorder)
@@ -195,54 +212,8 @@ PopupWindow {
           width: settings.contentWidth
           spacing: Style.spacing.md
 
-          // Section wrapper helper
-          component SectionBox: Column {
-             id: box
-             width: parent.width
-             spacing: Style.spacing.sm
-             property string title: ""
-             property string icon: ""
-
-             Row {
-               spacing: 8
-               anchors.left: parent.left
-               anchors.leftMargin: 4
-               Text {
-                 text: box.icon
-                 font.pixelSize: 13
-                 anchors.verticalCenter: parent.verticalCenter
-               }
-               Text {
-                 text: box.title
-                 color: Color.accent
-                 font.family: Style.font.resolvedFamily
-                 font.pixelSize: 11
-                 font.bold: true
-                 font.letterSpacing: 1.5
-                 anchors.verticalCenter: parent.verticalCenter
-               }
-             }
-
-             Rectangle {
-               width: parent.width
-               height: innerCol.implicitHeight + 28
-               radius: 14
-               color: Util.alpha(Color.popups.text, 0.03)
-               border.width: 1
-               border.color: Util.alpha(Color.popups.text, 0.08)
-
-               Column {
-                 id: innerCol
-                 x: 14; y: 14
-                 width: parent.width - 28
-                 spacing: Style.spacing.lg
-                 children: box.data
-               }
-             }
-          }
-
           // 1. APPEARANCE
-          SectionBox {
+          DockSection {
             title: "APPEARANCE"
             icon: "🎨"
             
@@ -254,7 +225,9 @@ PopupWindow {
                    Item { Layout.fillWidth: true }
                    Rectangle {
                      radius: 6; color: Util.alpha(Color.accent, 0.15)
-                     width: 44; height: 22
+                     // Layout-managed: an explicit width/height here is
+                     // undefined behaviour (and the badge could be stretched).
+                     Layout.preferredWidth: 44; Layout.preferredHeight: 22
                      Text { anchors.centerIn: parent; text: Math.round(sizeSlider.liveValue) + "px"; color: Color.accent; font.pixelSize: 11; font.bold: true }
                    }
                  }
@@ -275,7 +248,9 @@ PopupWindow {
                    Item { Layout.fillWidth: true }
                    Rectangle {
                      radius: 6; color: Util.alpha(Color.accent, 0.15)
-                     width: 44; height: 22
+                     // Layout-managed: an explicit width/height here is
+                     // undefined behaviour (and the badge could be stretched).
+                     Layout.preferredWidth: 44; Layout.preferredHeight: 22
                      Text { anchors.centerIn: parent; text: Math.round(zoomSlider.liveValue) + "%"; color: Color.accent; font.pixelSize: 11; font.bold: true }
                    }
                  }
@@ -352,8 +327,69 @@ PopupWindow {
             }
           }
 
-          // 2. GLOW & LIGHTING
-          SectionBox {
+          // 2. BORDER
+          DockSection {
+            title: "BORDER"
+            icon: "🔲"
+
+            Column { width: parent.width; spacing: 16
+               DockToggle {
+                 width: parent.width
+                 label: "🖼️ Show Border"
+                 description: "Hairline ring around the glass."
+                 stored: settings.dock.flag("border", true)
+                 foreground: Color.popups.text
+                 accent: Color.accent
+                 onRequestWrite: function(v) { settings.dock.applySetting("border", String(v)) }
+               }
+
+               Column { width: parent.width; spacing: 8; visible: settings.dock.flag("border", true)
+                 RowLayout { width: parent.width
+                   Text { text: "🔆 Border Opacity"; font.bold: true; color: Color.popups.text; font.pixelSize: 13 }
+                   Item { Layout.fillWidth: true }
+                   Rectangle {
+                     radius: 6; color: Util.alpha(Color.accent, 0.15)
+                     // Layout-managed: an explicit width/height here is
+                     // undefined behaviour (and the badge could be stretched).
+                     Layout.preferredWidth: 44; Layout.preferredHeight: 22
+                     Text { anchors.centerIn: parent; text: Math.round(borderOpacitySlider.liveValue) + "%"; color: Color.accent; font.pixelSize: 11; font.bold: true }
+                   }
+                 }
+                 DragSlider {
+                   id: borderOpacitySlider
+                   width: parent.width
+                   minimum: 0; maximum: 100; step: 5; integer: true
+                   value: Math.round(settings.dock.fraction("borderOpacity", 1.0) * 100)
+                   fillColor: Color.accent; knobColor: Color.accent
+                   onReleased: function(v) { settings.dock.applySetting("borderOpacity", String(v / 100)) }
+                 }
+               }
+
+               Column { width: parent.width; spacing: 8; visible: settings.dock.flag("border", true)
+                 Text { text: "🎨 Border Color"; font.bold: true; color: Color.popups.text; font.pixelSize: 13 }
+                 ButtonGroup {
+                   options: [
+                     { value: "theme", label: "Theme" },
+                     { value: "white", label: "White" },
+                     { value: "accent", label: "Accent" },
+                     { value: "black", label: "Black" }
+                   ]
+                   value: settings.dock.borderColorChoice === "" ? "theme" : settings.dock.borderColorChoice
+                   foreground: Color.popups.text
+                   background: Color.popups.background
+                   accent: Color.accent
+                   onChanged: function(v) {
+                     // "theme" removes the override so the theme token rules again.
+                     if (String(v) === "theme") settings.dock.applySetting("borderColor", "null")
+                     else settings.dock.applySetting("borderColor", JSON.stringify(String(v)))
+                   }
+                 }
+               }
+            }
+          }
+
+          // 3. GLOW & LIGHTING
+          DockSection {
             title: "GLOW & LIGHTING"
             icon: "✨"
             
@@ -376,7 +412,9 @@ PopupWindow {
                    Item { Layout.fillWidth: true }
                    Rectangle {
                      radius: 6; color: Util.alpha(Color.accent, 0.15)
-                     width: 44; height: 22
+                     // Layout-managed: an explicit width/height here is
+                     // undefined behaviour (and the badge could be stretched).
+                     Layout.preferredWidth: 44; Layout.preferredHeight: 22
                      Text { anchors.centerIn: parent; text: Math.round(glowStrengthSlider.liveValue) + "%"; color: Color.accent; font.pixelSize: 11; font.bold: true }
                    }
                  }
@@ -394,11 +432,10 @@ PopupWindow {
             }
           }
           
-          // 3. BEHAVIOUR
-          SectionBox {
+          // 4. BEHAVIOUR
+          DockSection {
              title: "BEHAVIOUR & INTERACTION"
              icon: "⚙️"
-             
              Column { width: parent.width; spacing: 16
                DockToggle {
                  width: parent.width
@@ -421,11 +458,10 @@ PopupWindow {
              }
           }
 
-          // 4. TASKBAR SYNC
-          SectionBox {
+          // 5. TASKBAR SYNC
+          DockSection {
              title: "TASKBAR INTEGRATION"
              icon: "🔗"
-             
              Column { width: parent.width; spacing: 16
                DockToggle {
                  width: parent.width
