@@ -2,9 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.omiddev9.mac-dock-liquid-glass",
   "name": "Mac Dock Liquid Glass",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Omid.Developer",
-  "description": "macOS Tahoe-style dock for the Omarchy shell: fisheye magnification, liquid glass surface with Hyprland backdrop blur and specular highlights, squircle icon treatment.",
+  "license": "MIT",
+  "description": "macOS Tahoe-style liquid glass dock for the Omarchy shell: backdrop blur with specular highlights, continuous fisheye magnification, smart intelli-hide, live window control, configurable border and glow colours, and a built-in settings panel.",
   "kinds": [
     "panel"
   ],
