@@ -247,17 +247,15 @@ Item {
   // How much of its growth an icon "lifts" out of the bar (dash2dock
   // ANIM_ICON_RAISE is 0.5).
   readonly property real zoomRaise: fraction("zoomRaise", 0.5)
-  // Animation length of the reflow, ms.
-  readonly property int animMs: reduceMotion ? 0 : Math.round(num0("animation", 110))
-
   // Every transition in the plugin is timed through this rather than the
-  // shell's Style.duration(): Style.duration() only follows the shell-wide
-  // "Reduce Motion" toggle, so turning the dock's own reduceMotion key on
-  // left the slide/fade/reflow transitions running. The plugin helper zeroes
-  // them for either switch.
+  // shell's Style.duration(), which only follows the shell-wide animations
+  // toggle — the plugin's own Reduce Motion key has to silence them too.
   function anim(ms) {
     return reduceMotion ? 0 : Math.round(ms)
   }
+
+  // Animation length of the reflow, ms.
+  readonly property int animMs: anim(num0("animation", 110))
 
   // The slider's 0–1 override is applied on top of the border color (RGB
   // preserved, alpha forced), so the label matches what renders.
@@ -873,6 +871,20 @@ Item {
   function fishStep() {
     var n = displayItems.length
     if (n === 0) { fishSmoothing = false; return }
+
+    // No lens means nothing to ease: drop every cell straight onto the base
+    // layout and park the loop. Easing here would play a glide of a few
+    // hundred ms exactly when Reduce Motion (or `magnify: false`) asked for
+    // none — e.g. the moment the switch is flipped with the pointer inside.
+    if (!magnify) {
+      var snaps = []
+      for (var k = 0; k < n; k++) snaps.push(1)
+      fishScaleCur = snaps
+      fishPosCur = cellPos.slice(0, n)
+      fishSmoothing = false
+      return
+    }
+
     var targets = computedTargets()
     ensureFishState()
 

@@ -38,16 +38,12 @@ Item {
   property color foreground: Color.popups.text
   property color accent: Color.accent
 
-  // An effective state decided outside this switch: Omarchy's shell-wide
-  // Reduce Motion can already be on while the dock's own key is off. Showing
-  // `stored` there draws the switch off while the dock visibly sits still, so
-  // `locked` mirrors `lockedValue` instead and `lockedNote` replaces the
-  // description to say where the state comes from and why the switch is inert.
+  // On when something outside this switch decided it: Omarchy's global Reduce
+  // Motion can already be active while the dock's own key is off. The switch
+  // then reads on and cannot be flipped, and `lockedNote` says why.
   property bool locked: false
-  property bool lockedValue: true
   property string lockedNote: ""
 
-  readonly property bool effective: locked ? lockedValue : pending
   enabled: !locked
   opacity: locked ? 0.85 : 1.0
 
@@ -61,7 +57,7 @@ Item {
     anchors.fill: parent
     label: root.label
     description: (root.locked && root.lockedNote !== "") ? root.lockedNote : root.description
-    checked: root.effective
+    checked: root.locked || root.pending
     foreground: root.foreground
     accent: root.accent
 

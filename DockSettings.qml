@@ -468,8 +468,7 @@ PopupWindow {
                  // motionless whatever this key says — show that effective
                  // state and name its source instead of drawing the switch off.
                  locked: settings.dock.reduceMotion && !settings.dock.reduceMotionForced
-                 lockedValue: true
-                 lockedNote: "On — Omarchy's global Reduce Motion is enabled, so the dock already runs without animation or glass."
+                 lockedNote: "On — Omarchy's global Reduce Motion is enabled."
                  foreground: Color.popups.text
                  accent: Color.accent
                  onRequestWrite: function(v) { settings.dock.applySetting("reduceMotion", String(v)) }
