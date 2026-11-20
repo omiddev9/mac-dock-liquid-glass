@@ -250,6 +250,15 @@ Item {
   // Animation length of the reflow, ms.
   readonly property int animMs: reduceMotion ? 0 : Math.round(num0("animation", 110))
 
+  // Every transition in the plugin is timed through this rather than the
+  // shell's Style.duration(): Style.duration() only follows the shell-wide
+  // "Reduce Motion" toggle, so turning the dock's own reduceMotion key on
+  // left the slide/fade/reflow transitions running. The plugin helper zeroes
+  // them for either switch.
+  function anim(ms) {
+    return reduceMotion ? 0 : Math.round(ms)
+  }
+
   // The slider's 0–1 override is applied on top of the border color (RGB
   // preserved, alpha forced), so the label matches what renders.
   readonly property real borderOpacity: fraction("borderOpacity", 1.0)
@@ -1792,7 +1801,7 @@ Item {
       // 0 = docked, 1 = parked off-screen.
       property real slide: dockWindow.shown ? 0 : 1
       Behavior on slide {
-        NumberAnimation { duration: Style.duration(190); easing.type: Easing.OutCubic }
+        NumberAnimation { duration: root.anim(190); easing.type: Easing.OutCubic }
       }
 
       // Parked = pushed out past its own edge. The start/end margins keep
@@ -1872,9 +1881,10 @@ Item {
           Behavior on height {
             NumberAnimation { duration: root.settingsOpen ? 0 : root.animMs; easing.type: Easing.OutCubic }
           }
+                    
           opacity: card.opacity
           Behavior on opacity {
-            NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
+            NumberAnimation { duration: root.anim(140); easing.type: Easing.OutCubic }
           }
 
           // One 2px stroke per pixel-envelope step. `step` moves the ring
@@ -1979,7 +1989,7 @@ Item {
 
           opacity: dockWindow.shown ? 1 : 0
           Behavior on opacity {
-            NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
+            NumberAnimation { duration: root.anim(140); easing.type: Easing.OutCubic }
           }
 
           // The dock's own background dismisses the menu (the dock sits

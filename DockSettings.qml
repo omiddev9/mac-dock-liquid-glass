@@ -233,6 +233,7 @@ PopupWindow {
                  }
                  DragSlider {
                    id: sizeSlider
+                   dock: settings.dock
                    width: parent.width
                    minimum: 24; maximum: 96; step: 2; integer: true
                    value: settings.dock.num("iconSize", 44)
@@ -256,6 +257,7 @@ PopupWindow {
                  }
                  DragSlider {
                    id: zoomSlider
+                   dock: settings.dock
                    width: parent.width
                    minimum: 0; maximum: 100; step: 5; integer: true
                    value: Math.round(settings.dock.fraction("zoom", 0.48) * 100)
@@ -357,6 +359,7 @@ PopupWindow {
                  }
                  DragSlider {
                    id: borderOpacitySlider
+                   dock: settings.dock
                    width: parent.width
                    minimum: 0; maximum: 100; step: 5; integer: true
                    value: Math.round(settings.dock.fraction("borderOpacity", 1.0) * 100)
@@ -420,6 +423,7 @@ PopupWindow {
                  }
                  DragSlider {
                    id: glowStrengthSlider
+                   dock: settings.dock
                    width: parent.width
                    minimum: 0; maximum: 100; step: 5; integer: true
                    value: Math.round(settings.dock.fraction("glowAmount", 0.5) * 100)

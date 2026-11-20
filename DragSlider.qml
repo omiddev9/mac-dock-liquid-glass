@@ -20,6 +20,9 @@ Item {
   id: root
 
   property QtObject bar: null
+  // The dock root, so every transition here follows the plugin's own anim()
+  // helper and stops under either Reduce Motion switch.
+  property var dock: null
   property real value: 0
   property real minimum: 0
   property real maximum: 1
@@ -70,6 +73,8 @@ Item {
   readonly property real progress: Math.max(0, Math.min(1, (liveValue - minimum) / range))
   readonly property bool _hot: mouseArea.containsMouse || root.dragging
 
+  function anim(ms) { return root.dock ? root.dock.anim(ms) : Math.round(ms) }
+
   Rectangle {
     id: track
     anchors.verticalCenter: parent.verticalCenter
@@ -91,7 +96,7 @@ Item {
 
     Behavior on width {
       enabled: !root.dragging
-      NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+      NumberAnimation { duration: root.anim(140); easing.type: Easing.OutCubic }
     }
   }
 
@@ -122,11 +127,11 @@ Item {
 
     Behavior on x {
       enabled: !root.dragging
-      NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+      NumberAnimation { duration: root.anim(140); easing.type: Easing.OutCubic }
     }
 
     Behavior on scale {
-      NumberAnimation { duration: 110; easing.type: Easing.OutCubic }
+      NumberAnimation { duration: root.anim(110); easing.type: Easing.OutCubic }
     }
   }
 

@@ -118,11 +118,11 @@ Item {
   // states: mounting, config reloads and the plain 1.12 hover magnify.
   Behavior on x {
     enabled: !cell.dragged && !cell.dock.fishSmoothing && !cell.dock.fisheyeActive
-    NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
+    NumberAnimation { duration: cell.dock.anim(140); easing.type: Easing.OutCubic }
   }
   Behavior on y {
     enabled: !cell.dragged && !cell.dock.fishSmoothing && !cell.dock.fisheyeActive
-    NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
+    NumberAnimation { duration: cell.dock.anim(140); easing.type: Easing.OutCubic }
   }
 
   Timer {
@@ -216,7 +216,7 @@ Item {
       anchors.centerIn: parent
       text: cell.glyph
       color: iconHover.hovered ? Color.accent : cell.dock.glyphColor
-      Behavior on color { ColorAnimation { duration: Style.duration(120) } }
+      Behavior on color { ColorAnimation { duration: cell.dock.anim(120) } }
       opacity: cell.dock.iconOpacity
       font.family: Style.font.resolvedFamily
       font.pixelSize: cell.dock.tiles
@@ -235,6 +235,7 @@ Item {
       sourceOversample: cell.dock.slot * 2
       tinted: cell.tinted
       ink: iconHover.hovered ? Color.accent : cell.dock.glyphColor
+      dock: cell.dock
     }
   }
 
@@ -381,7 +382,7 @@ Item {
     readonly property bool shown: cell.isRunning && iconHover.hovered && !cell.dock.dragging
     visible: opacity > 0
     opacity: shown ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: Style.duration(120) } }
+    Behavior on opacity { NumberAnimation { duration: cell.dock.anim(120) } }
 
     width: Math.max(15, Math.round(cell.dock.slot * 0.4))
     height: width
@@ -441,7 +442,7 @@ Item {
     height: cell.dock.vertical ? along : across
     radius: line ? 1 : 3
     color: focused ? Color.accent : Util.alpha(Color.accent, 0.45)
-    Behavior on color { ColorAnimation { duration: Style.duration(140) } }
+    Behavior on color { ColorAnimation { duration: cell.dock.anim(140) } }
   }
 
   // Count badge on grouped icons. It shares the top-right corner with the
@@ -450,7 +451,7 @@ Item {
     readonly property bool shown: !cell.isRule && cell.wins.length > 1 && !pinBadge.shown
     visible: opacity > 0
     opacity: shown ? 1 : 0
-    Behavior on opacity { NumberAnimation { duration: Style.duration(120) } }
+    Behavior on opacity { NumberAnimation { duration: cell.dock.anim(120) } }
 
     height: Math.max(14, Math.round(cell.dock.slot * 0.32))
     width: Math.max(height, Math.round(countText.implicitWidth + height * 0.45))

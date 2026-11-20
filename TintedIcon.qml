@@ -18,6 +18,9 @@ Item {
   // The ink when tinted. Follows the glyph grammar: the dock passes its
   // glyph colour at rest and the accent under the pointer.
   property color ink: "white"
+  // The dock root, so the tint fade is timed by its anim() helper (zeroed by
+  // either Reduce Motion switch) instead of a hardcoded duration.
+  property var dock: null
 
   Image {
     id: img
@@ -38,6 +41,8 @@ Item {
     source: img
     colorization: 1.0
     colorizationColor: art.ink
-    Behavior on colorizationColor { ColorAnimation { duration: 120 } }
+    Behavior on colorizationColor {
+      ColorAnimation { duration: art.dock ? art.dock.anim(120) : 120 }
+    }
   }
 }
