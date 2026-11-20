@@ -224,9 +224,15 @@ Item {
   readonly property bool tintRunning: flag("tintRunning", true)
   readonly property bool monochrome: flag("monochrome", false)
 
+  // Omarchy's global Reduce Motion follows `omarchy toggle animations`; the
+  // plugin key forces it on for this dock alone. Either way the dock drops the
+  // fisheye, every transition and the liquid-glass finish.
+  readonly property bool reduceMotionForced: flag("reduceMotion", false)
+  readonly property bool reduceMotion: Style.reduceMotion || reduceMotionForced
+
   readonly property bool labels: flag("labels", true)
   readonly property bool windowPreview: flag("windowPreview", true)
-  readonly property bool magnify: flag("magnify", true)
+  readonly property bool magnify: flag("magnify", true) && !reduceMotion
   readonly property bool showWhenEmpty: flag("showWhenEmpty", false)
   readonly property bool hotspotFullWidth: flag("hotspotFullWidth", false)
   readonly property int hotspotHeight: Math.max(1, Style.space(num("hotspotHeight", 2)))
@@ -242,7 +248,7 @@ Item {
   // ANIM_ICON_RAISE is 0.5).
   readonly property real zoomRaise: fraction("zoomRaise", 0.5)
   // Animation length of the reflow, ms.
-  readonly property int animMs: Math.round(num0("animation", 110))
+  readonly property int animMs: reduceMotion ? 0 : Math.round(num0("animation", 110))
 
   // The slider's 0–1 override is applied on top of the border color (RGB
   // preserved, alpha forced), so the label matches what renders.
@@ -976,7 +982,7 @@ Item {
   // because a layer surface cannot sample the compositor's backdrop: the
   // refraction is faked with a specular rim, a top bloom and a pointer
   // sheen that drifts with the lens.
-  readonly property bool glass: flag("glass", true)
+  readonly property bool glass: flag("glass", true) && !reduceMotion
   readonly property real glassTint: fraction("glassTint", 0.42)
   readonly property color glassColor: String(config.glassColor || "#0b0b10")
   readonly property real glassEdge: fraction("glassEdge", 1.0)
@@ -1786,7 +1792,7 @@ Item {
       // 0 = docked, 1 = parked off-screen.
       property real slide: dockWindow.shown ? 0 : 1
       Behavior on slide {
-        NumberAnimation { duration: 190; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Style.duration(190); easing.type: Easing.OutCubic }
       }
 
       // Parked = pushed out past its own edge. The start/end margins keep
@@ -1868,7 +1874,7 @@ Item {
           }
           opacity: card.opacity
           Behavior on opacity {
-            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
           }
 
           // One 2px stroke per pixel-envelope step. `step` moves the ring
@@ -1924,7 +1930,9 @@ Item {
           // card instead of being painted over.
           color: root.glass
             ? Util.alpha(root.glassColor, root.glassTint)
-            : Util.alpha(Color.popups.background, root.backgroundOpacity)
+            : root.reduceMotion
+              ? Util.alpha(Color.popups.background, 1.0)
+              : Util.alpha(Color.popups.background, root.backgroundOpacity)
           borderSpec: root.dockBorder
 
           // ------------------------------------------------------ glass
@@ -1971,7 +1979,7 @@ Item {
 
           opacity: dockWindow.shown ? 1 : 0
           Behavior on opacity {
-            NumberAnimation { duration: 140; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: Style.duration(140); easing.type: Easing.OutCubic }
           }
 
           // The dock's own background dismisses the menu (the dock sits
@@ -2110,6 +2118,9 @@ Item {
         activeScreen: root.activeScreen,
         hovering: root.hotspotHovers > 0 || root.dockHovers > 0,
         pointerInside: root.pointerInside,
+        reduceMotion: root.reduceMotion,
+        glass: root.glass,
+        magnify: root.magnify,
         items: root.displayItems.length,
         label: root.hoveredLabel
       })

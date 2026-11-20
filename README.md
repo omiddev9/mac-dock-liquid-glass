@@ -14,6 +14,10 @@ Quickshell (QML) for Omarchy Quattro on Hyprland.
 - **Liquid glass surface** — frosted backdrop blur, dynamic tinting, specular
   highlight, adjustable glass radius, padding, and three corner shapes
   (rounded, square, pill).
+- **Reduce Motion** — when the dock's Reduce Motion toggle is on, or Omarchy's
+  animations are off (`omarchy toggle animations`), the fisheye, transitions
+  and the glass finish are disabled and the dock renders as a static opaque
+  surface.
 - **Continuous fisheye magnification** — per-icon zoom with an optional
   Gaussian falloff, magnification raise, and fluid reflow as icons scale.
 - **Border & glow controls** — a hairline ring with its own opacity and colour
@@ -127,8 +131,8 @@ built-in default):
 `glassRadius`, `glassTint`, `glyphColor`, `glyphScale`, `hideDelay`,
 `hotspotFullWidth`, `hotspotHeight`, `iconOpacity`, `iconSize`, `labels`,
 `macIconTheme`, `macIcons`, `magnify`, `matchBarCorners`, `matchBarGlow`,
-`matchBarOpacity`, `monochrome`, `padding`, `pressure`, `revealDelay`,
-`runningIndicator`, `showRunning`, `showWhenEmpty`, `spacing`, `tileInset`,
+`matchBarOpacity`, `monochrome`, `padding`, `pressure`, `reduceMotion`,
+`revealDelay`, `runningIndicator`, `showRunning`, `showWhenEmpty`, `spacing`, `tileInset`,
 `tileOpacity`, `tileRadius`, `tiles`, `tintIcons`, `tintRunning`, `tooltips`,
 `zoom`, `zoomRaise`.
 

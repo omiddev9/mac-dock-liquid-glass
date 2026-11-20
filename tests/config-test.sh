@@ -120,6 +120,10 @@ check "set accepts booleans" "true" "$(
   cfg set monochrome true >/dev/null
   field '.monochrome'
 )"
+check "set accepts reduceMotion" "true" "$(
+  cfg set reduceMotion true >/dev/null
+  field '.reduceMotion'
+)"
 cfg set iconSize null >/dev/null
 check "set null removes the key" "null" "$(field '.iconSize')"
 check "a refused key is not written" "null" "$(field '.icnoSize')"
@@ -225,7 +229,7 @@ help_lists_keys() {
   out=$("$CONFIG" --help)
   for k in animation autohide backgroundOpacity border cornerShape edge edgeGap \
     fullWidth gaussianZoom glyphScale iconSize labels magnify monochrome \
-    runningIndicator showWhenEmpty spacing tiles tooltips zoom zoomRaise; do
+    reduceMotion runningIndicator showWhenEmpty spacing tiles tooltips zoom zoomRaise; do
     grep -qw -- "$k" <<<"$out" || missing=1
   done
   [[ $missing == 0 ]] && echo yes

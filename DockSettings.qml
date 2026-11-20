@@ -455,6 +455,15 @@ PopupWindow {
                  accent: Color.accent
                  onRequestWrite: function(v) { settings.dock.applySetting("tooltips", String(v)) }
                }
+               DockToggle {
+                 width: parent.width
+                 label: "🎞️ Reduce Motion"
+                 description: "No fisheye, no transitions, and no liquid-glass finish. Also follows Omarchy's animations toggle."
+                 stored: settings.dock.reduceMotionForced
+                 foreground: Color.popups.text
+                 accent: Color.accent
+                 onRequestWrite: function(v) { settings.dock.applySetting("reduceMotion", String(v)) }
+               }
              }
           }
 

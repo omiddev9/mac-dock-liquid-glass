@@ -29,7 +29,7 @@ KNOWN_KEYS=(
   glassRadius glassTint glyphColor glyphScale hideDelay hotspotFullWidth
   hotspotHeight iconOpacity iconSize labels macIconTheme macIcons magnify
   matchBarCorners matchBarGlow matchBarOpacity monochrome padding pressure
-  revealDelay runningIndicator showRunning showWhenEmpty spacing tileInset
+  reduceMotion revealDelay runningIndicator showRunning showWhenEmpty spacing tileInset
   tileOpacity tileRadius tiles tintIcons tintRunning tooltips windowPreview zoom zoomRaise
 )
 # The plugin's own dir, resolved through any symlink (the configurator is
