@@ -464,6 +464,12 @@ PopupWindow {
                  label: "🎞️ Reduce Motion"
                  description: "No fisheye, no transitions, and no liquid-glass finish. Also follows Omarchy's animations toggle."
                  stored: settings.dock.reduceMotionForced
+                 // With Omarchy's global Reduce Motion on, the dock is already
+                 // motionless whatever this key says — show that effective
+                 // state and name its source instead of drawing the switch off.
+                 locked: settings.dock.reduceMotion && !settings.dock.reduceMotionForced
+                 lockedValue: true
+                 lockedNote: "On — Omarchy's global Reduce Motion is enabled, so the dock already runs without animation or glass."
                  foreground: Color.popups.text
                  accent: Color.accent
                  onRequestWrite: function(v) { settings.dock.applySetting("reduceMotion", String(v)) }
